@@ -26,9 +26,6 @@ dev_id = int(input("Write device number: "))
 ser = serial.Serial()
 ser.port = devices[dev_id]
 ser.baudrate = 115200
-# ser.timeout = 0.001
-# ser.parity = serial.PARITY_EVEN
-
 ser.open()
 
 
