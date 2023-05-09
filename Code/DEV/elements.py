@@ -1,5 +1,5 @@
 import pygame
-
+import time
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
@@ -9,6 +9,92 @@ YELLOW = (204,204,0)
 pygame.font.init()
 font = pygame.font.Font(None, 24)
 font2 = pygame.font.Font(None, 18)
+font3 = pygame.font.Font(None, 32)
+
+class HidingSquare():
+    def __init__(self, w,h,x,y,screen, color):
+        self.w = w
+        self.h = h
+        self.x = x
+        self.y = y
+        self.screen = screen
+        self.color = color
+        self.selected = False
+        
+        self.start_timer = time.time()
+        self.completed = False
+
+    def update(self):
+        if(not self.selected):
+            self.start_timer = time.time()
+        
+        if(int(round(time.time() - self.start_timer)) >= 5):
+            self.completed = True
+           
+        
+        if(not self.completed):
+            pygame.draw.rect(self.screen, self.getLighterColor(), pygame.Rect(self.x, self.y, self.w, self.h))
+            if(self.selected):
+                title = font3.render(str(round(5 - (time.time() - self.start_timer))), True, WHITE)
+            else:
+                title = font3.render(str(5), True, WHITE)
+
+            t_rect = title.get_rect()
+            self.screen.blit(title, (self.x+(self.w/2)-t_rect.centerx, self.y+(self.h/2)+t_rect.centery))
+
+        if(self.selected):
+            pygame.draw.rect(self.screen, WHITE, pygame.Rect(self.x, self.y, self.w, self.h),5)
+            
+        
+        
+    def getLighterColor(self):
+        return [self.color[0] - self.color[0]/6, self.color[1] - self.color[1]/6, self.color[2] - self.color[2]/6]
+
+class ImageHidden():
+    def __init__(self, w, h, x,y, screen):
+        
+        self.W = w 
+        self.H = h 
+        self.X = x 
+        self.Y = y 
+        self.screen = screen
+        
+        self.image = pygame.image.load("./img2.png")
+        self.im_W = self.image.get_rect().w 
+        self.im_H = self.image.get_rect().h 
+        self.mini = min(self.H/self.im_H, self.W/self.im_W)
+        self.new_W = self.im_W * self.mini 
+        self.new_H = self.im_H * self.mini 
+        self.image = pygame.transform.scale(self.image, (int(self.new_W), int(self.new_H)))
+        
+        self.new_X = self.X + ((self.W - self.new_W)/2)
+        self.new_Y = self.Y + ((self.H - self.new_H)/2)
+        
+        self.squares = []
+        colors = [RED, YELLOW, GREEN]
+        for i in range(1,4):
+            if(self.H/self.im_H < self.W/self.im_W):
+                self.squares.append(HidingSquare(self.new_W, self.new_H/3,self.new_X, self.new_Y+((self.new_H/3)*(i-1)), self.screen,colors[i-1]))
+            else:
+                self.squares.append(HidingSquare(self.new_X+((self.new_W/3)*(i-1)), self.new_Y,self.new_W/3, self.new_H, self.screen,colors[i-1]))
+        
+        self.current_state = 0
+        
+    def diselectAll(self):
+        for sq in self.squares:
+            sq.selected = False
+    def upadte(self):
+        
+        # pygame.draw.rect(self.screen, WHITE, pygame.Rect(self.X, self.Y, self.W, self.H), 3)
+        self.screen.blit(self.image, pygame.Rect(self.new_X, self.new_Y, self.new_W, self.new_H))
+        # pygame.draw.rect(self.screen, WHITE, pygame.Rect(self.new_X, self.new_Y, self.new_W, self.new_H), 5)
+        
+        for square in self.squares:
+            square.update()
+            
+        self.squares[self.current_state].update()
+        
+            
 
 class BarPlot():
     def __init__(self, w, h, x,y, screen, minimum=0, maximum=0, porog1=0, porog2=0):
@@ -156,11 +242,6 @@ class Plotter():
         pygame.draw.rect(self.screen, WHITE, pygame.Rect(self.x,self.y,self.w,self.h))
         pygame.draw.rect(self.screen, GREEN, pygame.Rect(self.x,self.y,self.w,self.h), 3)
 
-        # Нарисовать заголовок
-        title = font.render(self.title, True, WHITE)
-        t_rect = title.get_rect()
-        self.screen.blit(title, (self.x+(self.w/2)-t_rect.centerx,self.y-t_rect.height))
-
         # Нарисовать сам график
         lines = []
         for i in range(len(self.nicedata)):
@@ -180,7 +261,10 @@ class Plotter():
         self.screen.blit(lmaxtext, (self.x, self.y))
         self.screen.blit(lmintext, (self.x, (self.y+self.h)-lmintext.get_rect().h ))
 
-
+        # Нарисовать заголовок
+        title = font.render(self.title, True, BLACK)
+        t_rect = title.get_rect()
+        self.screen.blit(title, (self.x+(self.w/2)-t_rect.centerx,self.y+2))
         
 class Point(pygame.sprite.Sprite):
     def __init__(self, x,y, radius):

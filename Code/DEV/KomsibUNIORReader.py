@@ -1,52 +1,44 @@
 from threading import Thread
 import serial
 import time
-import collections
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-# import serial.tools.list_ports_osx
-import serial.tools.list_ports_windows
+import serial.tools.list_ports_osx
+# import serial.tools.list_ports_windows
 import struct
 import numpy as np
-import requests
 
 class SerialReader:
+    #Инициализатор класса
     def __init__(self) -> None:
         baudrate = 115200
         port = self.askport()
         self.Thread = None 
-        
         self.data = [0,0,0]
         self.abs_data = [0,0,0]
         self.filt_data = [0,0,0]
-
         self.isRuining = True
-
         self.WINDOWLENGTH = 125 
-
         self.last_data = time.time()*1000
-
         print('Trying to connect to: ' + str(port) + ' at ' + str(baudrate) + ' BAUD.')
         try:
-            # self.serialConnection.open()
-            self.serialConnection = serial.Serial(port, baudrate, timeout=0.02)
-            # self.serialConnection.write(b"start\n")
-            
+            self.serialConnection = serial.Serial(port, baudrate, timeout=0.02)            
             print('Connected to ' + str(port) + ' at ' + str(baudrate) + ' BAUD.')
         except:
             print("Failed to connect with " + str(port) + ' at ' + str(baudrate) + ' BAUD.')
         
+    #Функция для запроса порта к которому необходимо подключится
     def askport(self) -> int:
         print("Available ports: ")
         devices = []
         i = 0
-        for port in list(serial.tools.list_ports_windows.comports()):
+        for port in list(serial.tools.list_ports_osx.comports()):
             devices.append(port.device)
             print(str(i)+": ", port)
             i+=1
         return devices[int(input("Write device number: "))]
     
-    
+    #Начало передачи данных и создание потока
     def startThread(self):
         self.serialConnection.write(b"stop\n")
         time.sleep(0.1)
@@ -59,38 +51,36 @@ class SerialReader:
         while(self.isRuining):
             if(self.serialConnection.in_waiting >= 16):
                 readed = self.serialConnection.read(4)
-                if(readed == b"DATA"):
+                if(readed == b"DATA"): #Пропускаем часть не показательных данных
                     self.serialConnection.read(12)
                 else:
-                    unpacked = struct.unpack("f", readed)[0]
+                    unpacked = struct.unpack("f", readed)[0] #Переводим в float
 
                     if(np.isnan(unpacked)):
-                        continue
+                        continue #Проверяем на число
                     
-                    if(unpacked > 3000 or unpacked < -3000):
-                        continue
-                    
-                    # if(unpacked - (sum(self.abs_data[-20:])/20) > 250):
-                    #     continue
+                    if(unpacked > 3000 or unpacked < -3000): 
+                        continue #Фильтруем выбросы
 
-                    current_point = float(unpacked)
-
+                    current_point = float(unpacked) 
                     self.data.append(current_point)
                     self.abs_data.append(abs(current_point))
+                    #Применяем фильтр с плаваюшим окном
                     self.filt_data.append(sum(self.abs_data[-self.WINDOWLENGTH:]) / self.WINDOWLENGTH)
+                    #Обрезаем данные до необходимого окна во избежании утечек памяти
                     self.data = self.data[-1024:]
                     self.abs_data = self.abs_data[-1024:]
                     self.filt_data = self.filt_data[-1024:]
 
                     self.last_data = time.time()*1000
-
+    #Закрытие порта, потока, остановка передачи данных
     def close(self):
         self.isRuining = False
         self.Thread.join()
         self.serialConnection.write(b"stop\n")
         self.serialConnection.close()
         print('Disconnected...')
-    
+    #Функция для очистки данных    
     def clear(self):
         self.data = []
         self.abs_data = []

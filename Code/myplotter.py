@@ -4,8 +4,8 @@ import time
 import collections
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-# import serial.tools.list_ports_osx
-import serial.tools.list_ports_windows
+import serial.tools.list_ports_osx
+# import serial.tools.list_ports_windows
 import struct
 import numpy as np
 
@@ -64,7 +64,7 @@ class SerialReader:
         print("Available ports: ")
         devices = []
         i = 0
-        for port in list(serial.tools.list_ports_windows.comports()):
+        for port in list(serial.tools.list_ports_osx.comports()):
             devices.append(port.device)
             print(str(i)+": ", port)
             i+=1

@@ -1,13 +1,15 @@
 import pygame
 import math as m
 import struct
-from elements import Plotter, drawinfo, BLACK, BarPlot
+from elements import Plotter, drawinfo, BLACK, BarPlot, ImageHidden
 import time
 from KomsibUNIORReader import SerialReader, getPorogs
 
 WIDTH = 1280
 HEIGHT = 720
-FPS = 30
+FPS = 60
+
+Timer = 5
 
 reader = SerialReader()
 reader.startThread()
@@ -25,6 +27,7 @@ all_sprites = pygame.sprite.Group()
 Plotter1 = Plotter(WIDTH/2.4, HEIGHT/4,   0   ,HEIGHT-HEIGHT/4, 1024, "Сырой сигнал", screen)
 Plotter3 = Plotter(WIDTH/2.4, HEIGHT/4,WIDTH/2.4,HEIGHT-HEIGHT/4, 1024, "Отфильтрованный",screen, minimum, maximum, porog1, porog2, drawPorog=True)
 Bar1 = BarPlot(WIDTH/6,HEIGHT,(WIDTH/2.4)*2,0, screen, minimum, maximum, porog1, porog2)
+Image1 = ImageHidden(WIDTH-(WIDTH/6), HEIGHT-(HEIGHT/4),  0, 0, screen)
 # Plotter2 = Plotter(WIDTH/3, HEIGHT/4,(WIDTH/3)*2,HEIGHT-HEIGHT/4, 1024, "sin", screen)
 # Цикл игры
 
@@ -44,6 +47,19 @@ while running:
     Plotter3.updateAllData(reader.filt_data)
     Bar1.UpdateValue(reader.filt_data[-1])
 
+    if(reader.filt_data[-1] > porog2):
+        Image1.diselectAll()
+        Image1.squares[0].selected = True
+        # self.current_color = RED
+    elif(reader.filt_data[-1] > porog1 and reader.filt_data[-1] < porog2):
+        # self.current_color = YELLOW
+        Image1.diselectAll()
+        Image1.squares[1].selected = True
+    else:
+        # self.current_color = GREEN
+        Image1.diselectAll()
+        Image1.squares[2].selected = True
+
     all_sprites.update()
     # for count in RESOLUTION:
     # Рендеринг
@@ -53,7 +69,7 @@ while running:
     Bar1.update()
     Plotter1.update()
     Plotter3.update()
-
+    Image1.upadte()
     all_sprites.draw(screen)
     # После отрисовки всего, переворачиваем экран
     pygame.display.flip()
