@@ -9,33 +9,33 @@ WIDTH = 1280
 HEIGHT = 720
 FPS = 60
 
-Timer = 5
+Timer = 5 
 
+#Инициализация модуля для получения данных  
 reader = SerialReader()
 reader.startThread()
+#Получение пороговых значений
 maximum, minimum, porog1, porog2 = getPorogs(reader)
 print(maximum, minimum, porog1, porog2)
+
 # Создаем игру и окно
 pygame.init()
 pygame.mixer.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT)) #, pygame.RESIZABLE)
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("ТЮИИ")
 clock = pygame.time.Clock()
 all_sprites = pygame.sprite.Group()
 
-# Plotter1 = Plotter(WIDTH/3,HEIGHT/4,0,HEIGHT-HEIGHT/4, 20)
+#Инициализация всех граф элементов
 Plotter1 = Plotter(WIDTH/2.4, HEIGHT/4,   0   ,HEIGHT-HEIGHT/4, 1024, "Сырой сигнал", screen)
 Plotter3 = Plotter(WIDTH/2.4, HEIGHT/4,WIDTH/2.4,HEIGHT-HEIGHT/4, 1024, "Отфильтрованный",screen, minimum, maximum, porog1, porog2, drawPorog=True)
 Bar1 = BarPlot(WIDTH/6,HEIGHT,(WIDTH/2.4)*2,0, screen, minimum, maximum, porog1, porog2)
 Image1 = ImageHidden(WIDTH-(WIDTH/6), HEIGHT-(HEIGHT/4),  0, 0, screen)
-# Plotter2 = Plotter(WIDTH/3, HEIGHT/4,(WIDTH/3)*2,HEIGHT-HEIGHT/4, 1024, "sin", screen)
-# Цикл игры
 
+# Цикл игры
 running = True
 while running:
     # Держим цикл на правильной скорости
-
-
     delay = clock.tick(FPS)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:

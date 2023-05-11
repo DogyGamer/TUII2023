@@ -22,7 +22,7 @@ class HidingSquare():
         self.selected = False
         
         self.start_timer = time.time()
-        self.completed = False
+        self.completed = True
 
     def update(self):
         if(not self.selected):
@@ -59,7 +59,7 @@ class ImageHidden():
         self.Y = y 
         self.screen = screen
         
-        self.image = pygame.image.load("./img2.png")
+        self.image = pygame.image.load("./image.png")
         self.im_W = self.image.get_rect().w 
         self.im_H = self.image.get_rect().h 
         self.mini = min(self.H/self.im_H, self.W/self.im_W)
@@ -74,21 +74,17 @@ class ImageHidden():
         colors = [RED, YELLOW, GREEN]
         for i in range(1,4):
             if(self.H/self.im_H < self.W/self.im_W):
-                self.squares.append(HidingSquare(self.new_W, self.new_H/3,self.new_X, self.new_Y+((self.new_H/3)*(i-1)), self.screen,colors[i-1]))
+                self.squares.append(HidingSquare(self.new_W, self.new_H/3, self.new_X, self.new_Y+((self.new_H/3)*(i-1)), self.screen,colors[i-1]))
             else:
-                self.squares.append(HidingSquare(self.new_X+((self.new_W/3)*(i-1)), self.new_Y,self.new_W/3, self.new_H, self.screen,colors[i-1]))
+                self.squares.append(HidingSquare(self.new_W/3, self.new_H, self.new_X+((self.new_W/3)*(i-1)), self.new_Y, self.screen,colors[i-1]))
         
         self.current_state = 0
         
     def diselectAll(self):
         for sq in self.squares:
             sq.selected = False
-    def upadte(self):
-        
-        # pygame.draw.rect(self.screen, WHITE, pygame.Rect(self.X, self.Y, self.W, self.H), 3)
+    def upadte(self):   
         self.screen.blit(self.image, pygame.Rect(self.new_X, self.new_Y, self.new_W, self.new_H))
-        # pygame.draw.rect(self.screen, WHITE, pygame.Rect(self.new_X, self.new_Y, self.new_W, self.new_H), 5)
-        
         for square in self.squares:
             square.update()
             
@@ -219,7 +215,7 @@ class Plotter():
         self.k = self.h / d 
 
         for i in range(len(self.data)):
-            self.nicedata[i] = self.DataCords2XYCords(self.data[i])
+            self.nicedata[i] = self.DataCords2XYCords(self.data[i]) 
             
     def updateAllData(self, data):
         self.data = data
@@ -235,6 +231,17 @@ class Plotter():
             self.nicedata[i] = self.DataCords2XYCords(self.data[i])
 
     def DataCords2XYCords(self, point):
+        #Пересчитываются при добавлении каждой новой точки
+        #lmin - локальный минимум текущего отрезка данных
+        #lmax - локальный максимум текущего отрезка данных
+        #k - коэффицент масштаба по формуле h / (lmin+lmax) 
+         
+        #Остаются неизменными
+        #h - высота плоттера на экране
+        #y - координата левого верхнего угла плоттера в окне программы
+        
+        
+        #point - значение данных
         return (self.h-((self.lmin+point) * self.k))+self.y
 
     def update(self):
